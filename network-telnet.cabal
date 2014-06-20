@@ -1,0 +1,43 @@
+name:                network-telnet
+version:             0.1.0.0
+synopsis: a telnet protocol implementation
+
+-- A longer description of the package.
+-- description:
+
+license:             MIT
+license-file:        LICENSE
+author:              Samuel Tesla
+maintainer:          samuel.tesla@gmail.com
+
+-- A copyright notice.
+-- copyright:
+
+category:            Network
+build-type:          Simple
+extra-source-files:  README.md
+
+cabal-version:       >=1.10
+
+library
+  -- Modules exported by the library.
+  -- exposed-modules:
+
+  -- Modules included in this library but not exported.
+  -- other-modules:
+
+  -- LANGUAGE extensions used by modules in this package.
+  -- other-extensions:
+
+  -- Other library packages from which modules are imported.
+  build-depends:       base >=4.6 && <4.7,
+                       bytestring,
+                       mtl,
+                       network,
+                       transformers
+
+  -- Directories containing source files.
+  hs-source-dirs:      src
+
+  -- Base language which the package is written in.
+  default-language:    Haskell2010
