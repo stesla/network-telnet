@@ -3,10 +3,6 @@
 
 module Network.Protocol.Telnet where
 
-import           Control.Applicative
-import           Control.Arrow (first)
-import           Data.Attoparsec.ByteString hiding (parse)
-import qualified Data.Attoparsec.ByteString as A
 import qualified Data.ByteString as B
 
 import GHC.Word
@@ -16,7 +12,6 @@ data Chunk = Bytes B.ByteString
            deriving (Eq, Ord, Show)
 
 data Command = Command Word8
-             | LiteralIAC
              | WILL Option
              | WONT Option
              | DO Option
@@ -26,27 +21,32 @@ data Command = Command Word8
 newtype Option = Option Word8
                deriving (Eq, Ord, Show)
 
-parse :: B.ByteString -> ([Chunk], B.ByteString)
-parse str = case B.elemIndex 255 str of
-  Nothing -> if B.null str then ([], B.empty) else ([Bytes str], B.empty)
-  _ -> case A.parse chunk str of
-    Fail _ _ y    -> error y
-    Done i c  -> first (c:) (parse i)
-    p@(Partial _) ->
-      case feed p "" of
-        Fail _ _ _ -> ([], str)
-        Done _ c'  -> ([c'], B.empty)
-        Partial _  -> error "not reachable"
+type ParseResult = Maybe (Chunk, B.ByteString)
 
-chunk = command <|> bytes
+readChunk :: B.ByteString -> ParseResult
+readChunk str = case B.elemIndex 255 str of
+  Nothing -> Just (Bytes str, B.empty)
+  Just 0  -> readCommand $ B.tail str
+  Just n  ->
+    let (xs, str') = B.splitAt n str in
+    case readCommand $ B.tail str' of
+      Just (Bytes ys, str'') -> return (Bytes $ B.append xs ys, str'')
+      _                      -> return (Bytes xs, str')
 
-bytes = takeWhile1 (/=255) >>= pure . Bytes
+readCommand :: B.ByteString -> ParseResult
+readCommand str = do
+  (x, str') <- B.uncons str
+  case x of
+    251 -> readOption WILL str'
+    252 -> readOption WONT str'
+    253 -> readOption DO   str'
+    254 -> readOption DONT str'
+    255 -> case readChunk str' of
+      Just (Bytes xs, str'') -> return (Bytes $ B.cons 255 xs, str'')
+      _                      -> return (Bytes $ B.pack [255], str')
+    _   -> return (IAC $ Command x, str')
 
-command = word8 255 >> do
-  word8 255 >> pure (IAC LiteralIAC)
-  <|> (word8 251 >> anyWord8 >>= pure . IAC . WILL . Option)
-  <|> (word8 252 >> anyWord8 >>= pure . IAC . WONT . Option)
-  <|> (word8 253 >> anyWord8 >>= pure . IAC . DO   . Option)
-  <|> (word8 254 >> anyWord8 >>= pure . IAC . DONT . Option)
-  <|> (satisfy (not . isOption) >>= pure . IAC . Command)
-  where isOption w = 251 <= w && w <= 254
+readOption :: (Option -> Command) -> B.ByteString -> ParseResult
+readOption f str = do
+  (x, str') <-  B.uncons str
+  return (IAC $ f $ Option x, str')

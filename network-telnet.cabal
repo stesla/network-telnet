@@ -30,8 +30,7 @@ library
   -- other-extensions:
 
   -- Other library packages from which modules are imported.
-  build-depends:       attoparsec >= 0.12,
-                       base >=4.6 && <4.7,
+  build-depends:       base >=4.6 && <4.7,
                        bytestring,
                        mtl,
                        network,
