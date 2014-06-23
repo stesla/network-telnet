@@ -27,29 +27,32 @@ readChunk :: B.ByteString -> ParseResult
 readChunk str = if B.length str == 0 then Nothing else readChunk'
   where
     readChunk' =
-      case B.elemIndex 255 str of
-        Nothing -> Just (Bytes str, B.empty)
-        Just 0  -> readCommand $ B.tail str
-        Just n  ->
-          let (xs, str') = B.splitAt n str in
-          case readCommand $ B.tail str' of
-            Just (Bytes ys, str'') -> return (Bytes $ B.append xs ys, str'')
-            _                      -> return (Bytes xs, str')
+        case B.elemIndex 255 str of
+            Nothing -> Just (Bytes str, B.empty)
+            Just 0  -> readCommand $ B.tail str
+            Just n  ->
+                let (xs, str') = B.splitAt n str in
+                case readCommand $ B.tail str' of
+                    Just (Bytes ys, str'') -> return (Bytes $ B.append xs ys, str'')
+                    _                      -> return (Bytes xs, str')
 
 readCommand :: B.ByteString -> ParseResult
 readCommand str = do
-  (x, str') <- B.uncons str
-  case x of
-    251 -> readOption WILL str'
-    252 -> readOption WONT str'
-    253 -> readOption DO   str'
-    254 -> readOption DONT str'
-    255 -> case readChunk str' of
-      Just (Bytes xs, str'') -> return (Bytes $ B.cons 255 xs, str'')
-      _                      -> return (Bytes $ B.pack [255], str')
-    _   -> return (IAC $ Command x, str')
+    (x, str') <- B.uncons str
+    case x of
+        251 -> readOption WILL str'
+        252 -> readOption WONT str'
+        253 -> readOption DO   str'
+        254 -> readOption DONT str'
+        255 -> readAfterLiteralIAC str'
+        _   -> return (IAC $ Command x, str')
+
+readAfterLiteralIAC :: B.ByteString -> ParseResult
+readAfterLiteralIAC str = case readChunk str of
+    Just (Bytes xs, str') -> return (Bytes $ B.cons 255 xs, str')
+    _                     -> return (Bytes $ B.pack [255], str)
 
 readOption :: (Option -> Command) -> B.ByteString -> ParseResult
 readOption f str = do
-  (x, str') <-  B.uncons str
-  return (IAC $ f $ Option x, str')
+    (x, str') <- B.uncons str
+    return (IAC $ f $ Option x, str')
