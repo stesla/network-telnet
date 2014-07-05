@@ -1,5 +1,4 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
-{-# OPTIONS -Wall -fno-warn-missing-signatures #-}
 
 module Network.Protocol.Telnet where
 
