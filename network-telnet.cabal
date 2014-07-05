@@ -36,6 +36,7 @@ test-suite properties
   hs-source-dirs: tests
   build-depends: base,
                  bytestring,
+                 hspec,
                  QuickCheck >= 2,
                  network-telnet
   main-is: Properties.hs

@@ -27,13 +27,10 @@ readChunk str = if B.length str == 0 then Nothing else readChunk'
   where
     readChunk' =
         case B.elemIndex 255 str of
-            Nothing -> Just (Bytes str, B.empty)
+            Nothing -> return (Bytes str, B.empty)
             Just 0  -> readCommand $ B.tail str
-            Just n  ->
-                let (xs, str') = B.splitAt n str in
-                case readCommand $ B.tail str' of
-                    Just (Bytes ys, str'') -> return (Bytes $ B.append xs ys, str'')
-                    _                      -> return (Bytes xs, str')
+            Just n  -> let (xs, str') = B.splitAt n str
+                       in return (Bytes xs, str')
 
 readCommand :: B.ByteString -> ParseResult
 readCommand str = do
@@ -43,7 +40,7 @@ readCommand str = do
         252 -> readOption WONT str'
         253 -> readOption DO   str'
         254 -> readOption DONT str'
-        255 -> readAfterLiteralIAC str'
+        255 -> return (Bytes $ B.pack [255], str')
         _   -> return (IAC $ Command x, str')
 
 readAfterLiteralIAC :: B.ByteString -> ParseResult
