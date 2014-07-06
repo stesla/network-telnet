@@ -28,15 +28,16 @@ library
                        mtl,
                        network,
                        transformers
-  ghc-options:         -Wall
+  ghc-options:         -Wall -Werror
 
 test-suite properties
   default-language:    Haskell2010
   type: exitcode-stdio-1.0
   hs-source-dirs: tests
+  main-is: Spec.hs
   build-depends: base,
                  bytestring,
                  hspec,
                  QuickCheck >= 2,
                  network-telnet
-  main-is: Properties.hs
+  ghc-options: -Wall -Werror

@@ -2,15 +2,15 @@
 
 module Main where
 
+import Instances ()
+
+import qualified Data.ByteString as B
+
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck
 
-import Control.Applicative
-
 import Network.Protocol.Telnet
-
-import qualified Data.ByteString as B
 
 main :: IO ()
 main = hspec $ do
@@ -53,7 +53,3 @@ main = hspec $ do
       prop "WONT" $ test 252 WONT
       prop "DO"   $ test 253 DO
       prop "DONT" $ test 254 DONT
-
-instance Arbitrary B.ByteString where
-  arbitrary = B.pack <$> arbitrary
-  shrink xs = B.pack <$> shrink (B.unpack xs)
