@@ -3,7 +3,7 @@
 module Instances where
 
 import Control.Applicative ((<$>))
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BS
 import Test.QuickCheck (Arbitrary, arbitrary, shrink)
 
 instance Arbitrary BS.ByteString where
