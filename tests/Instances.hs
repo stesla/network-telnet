@@ -3,9 +3,9 @@
 module Instances where
 
 import Control.Applicative ((<$>))
-import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString.Lazy as L
 import Test.QuickCheck (Arbitrary, arbitrary, shrink)
 
-instance Arbitrary BS.ByteString where
-  arbitrary = BS.pack <$> arbitrary
-  shrink xs = BS.pack <$> shrink (BS.unpack xs)
+instance Arbitrary L.ByteString where
+  arbitrary = L.pack <$> arbitrary
+  shrink xs = L.pack <$> shrink (L.unpack xs)

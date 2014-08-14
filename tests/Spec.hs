@@ -4,7 +4,7 @@ module Main where
 
 import Instances ()
 
-import qualified Data.ByteString.Lazy as B
+import qualified Data.ByteString.Lazy as L
 
 import Test.Hspec
 import Test.Hspec.QuickCheck
@@ -26,21 +26,21 @@ main = hspec $ do
         test "\255\254"
 
     it "reads literal IAC" $ do
-      readChunks "\255\255" `shouldBe` [Bytes (B.pack [255])]
+      readChunks "\255\255" `shouldBe` [Bytes (L.pack [255])]
 
     prop "reads arbitrary bytes (w/o telnet commands)" $
       let bytes = arbitrary `suchThat` \xs ->
-            B.length xs > 0 && case B.elemIndex 255 xs of
+            L.length xs > 0 && case L.elemIndex 255 xs of
               Nothing -> True
               Just x -> x > 0
           test xs = case readChunk xs of
-            Just (Bytes bs, rest) -> B.append bs rest == xs
+            Just (Bytes bs, rest) -> L.append bs rest == xs
             _ -> False
         in forAll bytes test
 
     prop "reads arbitrary telnet commands" $ do
-      let bytes = arbitrary `suchThat` \xs -> B.length xs >= 2 && (B.index xs 0) /= 255
-          test xs = case readChunk (B.cons 255 xs) of
+      let bytes = arbitrary `suchThat` \xs -> L.length xs >= 2 && (L.index xs 0) /= 255
+          test xs = case readChunk (L.cons 255 xs) of
             Nothing -> False
             Just chunk ->
               case fst chunk of
@@ -53,7 +53,7 @@ main = hspec $ do
         in forAll bytes test
 
     describe "reads options" $do
-      let test opt f x = case readChunk (B.pack [255, opt, x]) of
+      let test opt f x = case readChunk (L.pack [255, opt, x]) of
             Nothing -> False
             Just chunk ->
               case fst chunk of
