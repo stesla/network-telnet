@@ -25,6 +25,7 @@ library
   exposed-modules: Network.Protocol.Telnet.Internal
   build-depends:       base >=4.6 && <4.7,
                        bytestring,
+                       containers,
                        mtl,
                        network,
                        transformers

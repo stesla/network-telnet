@@ -45,10 +45,10 @@ main = hspec $ do
             Just chunk ->
               case fst chunk of
                 Command _ -> True
-                WILL _ -> True
-                WONT _ -> True
-                DO _ -> True
-                DONT _ -> True
+                Opt (WILL _) -> True
+                Opt (WONT _) -> True
+                Opt (DO _) -> True
+                Opt (DONT _) -> True
                 _ -> False
         in forAll bytes test
 
@@ -59,7 +59,7 @@ main = hspec $ do
               case fst chunk of
                 Bytes _ -> False
                 Command _ -> False
-                command -> command == f x
+                command -> command == Opt (f x)
       prop "WILL" $ test 251 WILL
       prop "WONT" $ test 252 WONT
       prop "DO"   $ test 253 DO
