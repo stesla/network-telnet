@@ -34,27 +34,32 @@ main = hspec $ do
               Nothing -> True
               Just x -> x > 0
           test xs = case readChunk xs of
-            (Bytes bs, rest) -> B.append bs rest == xs
+            Just (Bytes bs, rest) -> B.append bs rest == xs
             _ -> False
         in forAll bytes test
 
     prop "reads arbitrary telnet commands" $ do
       let bytes = arbitrary `suchThat` \xs -> B.length xs >= 2 && (B.index xs 0) /= 255
-          test xs = case fst $ readChunk (B.cons 255 xs) of
-            Command _ -> True
-            WILL _ -> True
-            WONT _ -> True
-            DO _ -> True
-            DONT _ -> True
-            _ -> False
+          test xs = case readChunk (B.cons 255 xs) of
+            Nothing -> False
+            Just chunk ->
+              case fst chunk of
+                Command _ -> True
+                WILL _ -> True
+                WONT _ -> True
+                DO _ -> True
+                DONT _ -> True
+                _ -> False
         in forAll bytes test
 
     describe "reads options" $do
-      let test opt f x = case fst $ readChunk (B.pack [255, opt, x]) of
-            Bytes _ -> False
-            Command _ -> False
-            End -> False
-            command -> command == f x
+      let test opt f x = case readChunk (B.pack [255, opt, x]) of
+            Nothing -> False
+            Just chunk ->
+              case fst chunk of
+                Bytes _ -> False
+                Command _ -> False
+                command -> command == f x
       prop "WILL" $ test 251 WILL
       prop "WONT" $ test 252 WONT
       prop "DO"   $ test 253 DO
